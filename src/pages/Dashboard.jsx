@@ -44,6 +44,24 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-label">Aktive Workouts</div>
+                    <div className="stat-value">3</div>
+                    <div className="badge" style={{ marginTop: '0.4rem' }}>Heute geplant</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Übungen</div>
+                    <div className="stat-value">24</div>
+                    <div className="badge" style={{ marginTop: '0.4rem' }}>Bibliothek</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Compliance</div>
+                    <div className="stat-value">82%</div>
+                    <div className="badge" style={{ marginTop: '0.4rem' }}>Letzte Woche</div>
+                </div>
+            </div>
+
             <div className="grid grid-cols-3">
                 {quickLinks.map((item) => (
                     <Link to={item.to} key={item.to}>
@@ -58,7 +76,7 @@ const Dashboard = () => {
                     </Link>
                 ))}
                 {(role === 'ADMIN' || role === 'THERAPIST') && (
-                    <div className="card" style={{ opacity: 0.8 }}>
+                    <div className="card" style={{ opacity: 0.9 }}>
                         <div className="badge">Bald</div>
                         <h3>Patienten</h3>
                         <p style={{ color: 'var(--text-secondary)' }}>Verwalte Profile, Pläne und Fortschritt.</p>
