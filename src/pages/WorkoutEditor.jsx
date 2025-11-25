@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const WorkoutEditor = () => {
     const [exercises, setExercises] = useState([]);
     const [split, setSplit] = useState('WEEK1');
     const [warmup, setWarmup] = useState([]);
     const [main, setMain] = useState([]);
+    const [error, setError] = useState('');
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         // Load available exercises
-        axios.get('/api/exercises').then(res => setExercises(res.data)).catch(console.error);
+        api.get('/api/exercises')
+            .then(res => setExercises(res.data))
+            .catch(() => setError('Übungen konnten nicht geladen werden'));
     }, []);
 
     const addToSection = (exId, section) => {
@@ -43,29 +47,42 @@ const WorkoutEditor = () => {
 
     const handleSave = async () => {
         // Construct payload matching Prisma schema structure (simplified for MVP)
+        setError('');
+        setSaving(true);
         const payload = {
             split,
             warmup: warmup.map(w => w.id),
             main: main.map(m => m.id),
             sets: [
-                ...warmup.flatMap(w => w.sets.map(s => ({ exerciseId: w.id, ...s }))),
-                ...main.flatMap(m => m.sets.map(s => ({ exerciseId: m.id, ...s })))
+                ...warmup.flatMap(w => w.sets.map(s => ({
+                    exerciseId: w.id,
+                    reps: Number.isFinite(s.reps) ? s.reps : 0,
+                    weight: Number.isFinite(s.weight) ? s.weight : null,
+                    band: s.band || null
+                }))),
+                ...main.flatMap(m => m.sets.map(s => ({
+                    exerciseId: m.id,
+                    reps: Number.isFinite(s.reps) ? s.reps : 0,
+                    weight: Number.isFinite(s.weight) ? s.weight : null,
+                    band: s.band || null
+                })))
             ]
         };
 
         try {
-            await axios.post('/api/workouts', payload);
+            await api.post('/api/workouts', payload);
             alert('Workout saved!');
             // Reset or redirect
         } catch (err) {
-            console.error(err);
-            alert('Error saving workout (Backend route might need implementation)');
+            setError(err.response?.data?.error || 'Fehler beim Speichern des Workouts');
         }
+        setSaving(false);
     };
 
     return (
         <div>
             <h2>Create Workout</h2>
+            {error && <div style={{ color: '#ff6b6b', margin: '0.5rem 0' }}>{error}</div>}
 
             <div className="glass card" style={{ marginBottom: '2rem' }}>
                 <label>Split Selection: </label>
@@ -97,8 +114,8 @@ const WorkoutEditor = () => {
                 />
             </div>
 
-            <button onClick={handleSave} style={{ marginTop: '2rem', width: '100%', padding: '1rem', fontSize: '1.2rem' }}>
-                Save Workout
+            <button onClick={handleSave} style={{ marginTop: '2rem', width: '100%', padding: '1rem', fontSize: '1.2rem' }} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Workout'}
             </button>
         </div>
     );

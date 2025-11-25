@@ -1,66 +1,50 @@
 # Gr3mWorkOut
 
-A modern, premium‑looking web application for physiotherapy training plans.
+Eine schlanke Trainings-App für Physio-Workouts (React + Vite, Express, Prisma/PostgreSQL). Enthält Rollen, Übungsbibliothek (YouTube/Uploads) und einen einfachen Workout-Planer.
 
 ## Features
-- Dark / Light theme with glass‑morphism UI
-- Admin / Therapist user roles with full patient management
-- Exercise library (YouTube links, custom video uploads)
-- Workout planner (2‑day split, warm‑up, sets, reps, weight, band level)
-- Local authentication (email / password) – ready for future OAuth
-- PostgreSQL database accessed via Prisma ORM
-- Video files stored on the server filesystem (uploads/videos)
+- Dark/Light Theme mit Glas-Optik
+- Rollen: Admin/Therapist/Patient (JWT-basiert)
+- Übungsbibliothek mit YouTube-Link und eigenem Video-Upload
+- Workout-Planer (2er Split, Warm-up/Main, Sets mit Gewicht/Band)
+- PostgreSQL via Prisma ORM
 
-## Quick start (development)
+## Entwicklung (lokal)
 ```bash
-# clone (if you haven't already)
-git clone https://github.com/GeorgesGremion/Gr3mWorkOut.git
-cd Gr3mWorkOut
-
-# copy example env and edit values
-cp .env.example .env
-# adjust DATABASE_URL, JWT_SECRET, PORT as needed
-
+cp .env.example .env           # env anpassen (DATABASE_URL, JWT_SECRET, PORT)
 npm install
 npx prisma generate
-npx prisma migrate dev --name init   # creates tables
-mkdir -p uploads/videos               # folder for uploaded videos
-npm run dev                           # starts Vite frontend + Express backend
+npx prisma migrate dev --name init
+mkdir -p uploads/videos
+npm run dev                    # startet Vite + Express
 ```
+Frontend: http://localhost:5173 (proxy auf API-Port 4000).
 
-The app will be reachable at `http://localhost:5173`.
+## API/Auth
+- Alle geschützten Routen erwarten `Authorization: Bearer <token>`.
+- Registrierung erstellt standardmäßig einen PATIENT. ADMIN/THERAPIST bitte manuell in der DB anlegen oder per Migration.
+- Datei-Upload nur für ADMIN/THERAPIST erlaubt, Video-Typen, Limit 500 MB.
 
-## Production deployment on Ubuntu 24.04
-A helper script `install.sh` is provided. It performs the following steps:
-1. System update & installs required packages (git, curl, Node 20, PostgreSQL).
-2. Creates a PostgreSQL database/user (`physio_db` / `physio_user`).
-3. Clones the repository (if not present) and checks out the latest code.
-4. Generates a `.env` file from the example and injects secure values.
-5. Installs npm dependencies, generates the Prisma client, runs the initial migration.
-6. Creates the `uploads/videos` directory.
-7. Starts the development server (for a real production setup you would use `npm run build` and a process manager like **pm2** together with an Nginx reverse‑proxy).
-
-### Run the installer
+## Deployment Ubuntu 24.04
+Der Installer richtet Node 20, PostgreSQL, das Repo und Prisma ein.
 ```bash
 chmod +x install.sh
 ./install.sh
 ```
-After the script finishes you can access the app at `http://<your‑server‑ip>:5173`.
-
-## Project structure
+Standardpfad: `/opt/physio-app`. Start im Entwicklungsmodus:
+```bash
+cd /opt/physio-app
+npm run dev -- --host
 ```
-├─ prisma/                # Prisma schema & migrations
-├─ src/                  # React frontend
-│   ├─ App.jsx
-│   ├─ main.jsx
-│   └─ index.css
-├─ server/               # Express backend
-├─ uploads/videos/        # Uploaded exercise videos (git‑ignored)
-├─ .env.example          # Example environment file
-├─ install.sh            # Ubuntu 24.04 installer script
-├─ package.json
-└─ README.md
+Für Produktion: Build + Prozessmanager (pm2/systemd) und Reverse-Proxy (nginx) nutzen.
+
+## Projektstruktur
+```
+prisma/          # Prisma Schema & Migrationen
+server/          # Express API
+src/             # React-Frontend
+uploads/videos/  # Upload-Ziel (gitignored)
 ```
 
-## License
-MIT – feel free to adapt and extend!
+## Lizenz
+MIT

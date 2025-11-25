@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 
 const LoginPage = () => {
     const [isRegister, setIsRegister] = useState(false);
@@ -14,7 +14,7 @@ const LoginPage = () => {
         setError('');
         const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
         try {
-            const res = await axios.post(endpoint, { email, password, role: 'THERAPIST' }); // Default role for demo
+            const res = await api.post(endpoint, { email, password });
             if (isRegister) {
                 // Auto login after register or just switch to login
                 setIsRegister(false);

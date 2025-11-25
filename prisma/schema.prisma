@@ -35,13 +35,31 @@ model Exercise {
 
 model Workout {
   id          Int      @id @default(autoincrement())
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  patientId   Int
+  patient     Patient? @relation(fields: [patientId], references: [id])
+  patientId   Int?
   date        DateTime @default(now())
   split       SplitType
-  warmup      Exercise[] @relation("WarmupExercises")
-  main        Exercise[] @relation("MainExercises")
-  sets        Set[]
+  warmupExercises WarmupExercise[]
+  mainExercises   MainExercise[]
+  sets            Set[]
+}
+
+model WarmupExercise {
+  id         Int      @id @default(autoincrement())
+  workout    Workout  @relation(fields: [workoutId], references: [id])
+  workoutId  Int
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId Int
+  order      Int      @default(0)
+}
+
+model MainExercise {
+  id         Int      @id @default(autoincrement())
+  workout    Workout  @relation(fields: [workoutId], references: [id])
+  workoutId  Int
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId Int
+  order      Int      @default(0)
 }
 
 model Set {
@@ -51,8 +69,8 @@ model Set {
   exercise    Exercise @relation(fields: [exerciseId], references: [id])
   exerciseId  Int
   reps        Int
-  weightKg    Float?
-  bandLevel   String?
+  weight      Float?
+  band        String?
 }
 
 enum Role {

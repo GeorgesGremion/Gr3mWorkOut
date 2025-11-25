@@ -28,7 +28,7 @@ const App = () => {
                     <header className="app-header glass">
                         <h1>Physio Trainer</h1>
                         <button onClick={toggleTheme} className="theme-toggle">
-                            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+                            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                         </button>
                     </header>
                     <main className="app-main">

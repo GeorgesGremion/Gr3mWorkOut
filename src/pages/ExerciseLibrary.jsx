@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const ExerciseLibrary = () => {
     const [exercises, setExercises] = useState([]);
@@ -7,22 +7,28 @@ const ExerciseLibrary = () => {
     const [formData, setFormData] = useState({ name: '', description: '', youtubeUrl: '' });
     const [videoFile, setVideoFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         fetchExercises();
     }, []);
 
     const fetchExercises = async () => {
+        setLoading(true);
+        setError('');
         try {
-            const res = await axios.get('/api/exercises');
+            const res = await api.get('/api/exercises');
             setExercises(res.data);
         } catch (err) {
-            console.error(err);
+            setError('Übungen konnten nicht geladen werden.');
         }
+        setLoading(false);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         const data = new FormData();
         data.append('name', formData.name);
         data.append('description', formData.description);
@@ -30,7 +36,7 @@ const ExerciseLibrary = () => {
         if (videoFile) data.append('video', videoFile);
 
         try {
-            await axios.post('/api/exercises', data, {
+            await api.post('/api/exercises', data, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (progressEvent) => {
                     const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -43,7 +49,7 @@ const ExerciseLibrary = () => {
             setUploadProgress(0);
             fetchExercises();
         } catch (err) {
-            alert('Failed to save exercise');
+            setError(err.response?.data?.error || 'Speichern fehlgeschlagen');
         }
     };
 
@@ -53,6 +59,8 @@ const ExerciseLibrary = () => {
                 <h2>Exercise Library</h2>
                 <button onClick={() => setShowAdd(!showAdd)}>{showAdd ? 'Cancel' : '+ Add Exercise'}</button>
             </div>
+
+            {error && <div style={{ marginBottom: '1rem', color: '#ff6b6b' }}>{error}</div>}
 
             {showAdd && (
                 <div className="glass card" style={{ marginBottom: '2rem' }}>
@@ -98,6 +106,8 @@ const ExerciseLibrary = () => {
                     </form>
                 </div>
             )}
+
+            {loading && <div style={{ opacity: 0.8, marginBottom: '1rem' }}>Lade Übungen...</div>}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
                 {exercises.map(ex => (

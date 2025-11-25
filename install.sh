@@ -1,47 +1,86 @@
 #!/usr/bin/env bash
-# install.sh - Ubuntu 24.04 setup for Gr3mWorkOut
-# -------------------------------------------------
-# 1. Update system & install prerequisites
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y git curl gnupg build-essential
+# install.sh - Ubuntu 24.04 Setup for Gr3mWorkOut / physio-app
+# Bereitet Node 20, PostgreSQL, das Repo, .env und Prisma vor. Idempotent ausgelegt.
 
-# 2. Install Node.js (v20) via Nodesource
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
+set -euo pipefail
 
-# 3. Install PostgreSQL
-sudo apt install -y postgresql postgresql-contrib
-# Create DB & user (you may adjust name/password)
-sudo -u postgres psql <<EOF
-CREATE DATABASE physio_db;
-CREATE USER physio_user WITH ENCRYPTED PASSWORD 'physio_pass';
-GRANT ALL PRIVILEGES ON DATABASE physio_db TO physio_user;
-EOF
+APP_DIR="/opt/physio-app"
+REPO_URL="https://github.com/GeorgesGremion/Gr3mWorkOut.git"
+DB_NAME="physio_db"
+DB_USER="physio_user"
+DB_PASS="physio_pass"
 
-# 4. Clone repository (if not already present)
-if [ ! -d "Gr3mWorkOut" ]; then
-  git clone https://github.com/GeorgesGremion/Gr3mWorkOut.git
+if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+  SUDO=""
+else
+  SUDO="sudo"
 fi
-cd Gr3mWorkOut
 
-# 5. Copy example env and adjust values
-cp .env.example .env
-# Edit .env manually or use sed (example below)
-sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://physio_user:physio_pass@localhost:5432/physio_db|" .env
-sed -i "s|JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|" .env
+export DEBIAN_FRONTEND=noninteractive
 
-# 6. Install npm dependencies & generate Prisma client
+echo "==> Pakete aktualisieren"
+$SUDO apt-get update -y
+$SUDO apt-get install -y git curl ca-certificates gnupg build-essential
+
+echo "==> Node.js 20 installieren"
+curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
+$SUDO apt-get install -y nodejs
+
+echo "==> PostgreSQL installieren/pruefen"
+$SUDO apt-get install -y postgresql postgresql-contrib
+$SUDO -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 || $SUDO -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
+$SUDO -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 || $SUDO -u postgres psql -c "CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';"
+$SUDO -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+
+# Repository nutzen (falls Skript bereits im Repo ausgefuehrt wird, kein erneutes Clonen)
+if [ -f "package.json" ] && grep -q "\"name\": \"physio-app\"" package.json; then
+  echo "==> Lokales Repo erkannt, benutze $(pwd)"
+  APP_DIR="$(pwd)"
+else
+  echo "==> Repository beziehen"
+  $SUDO mkdir -p "${APP_DIR}"
+  $SUDO chown -R "${USER}:${USER}" "${APP_DIR}"
+  if [ ! -d "${APP_DIR}/.git" ]; then
+    git clone "${REPO_URL}" "${APP_DIR}"
+  else
+    cd "${APP_DIR}"
+    git pull --rebase
+  fi
+  cd "${APP_DIR}"
+fi
+
+echo "==> .env erstellen/aktualisieren"
+cp -n .env.example .env
+JWT_SECRET=$(openssl rand -hex 32)
+sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}|" .env
+sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${JWT_SECRET}|" .env
+sed -i "s|^PORT=.*|PORT=4000|" .env
+
+echo "==> Dependencies installieren"
 npm install
-npx prisma generate
-# Run initial migration (creates tables)
-npx prisma migrate dev --name init
 
-# 7. Create uploads directory for videos
+echo "==> Prisma Client & Migrationen"
+npx prisma generate
+npx prisma migrate deploy || npx prisma migrate dev --name init
+
+echo "==> Upload-Verzeichnis anlegen"
 mkdir -p uploads/videos
 
-# 8. Start the development server (or use a process manager for prod)
-# For production you would typically use `npm run build` + a reverse proxy (nginx) and a process manager like pm2.
-# Here we just start the dev servers for quick verification:
-npm run dev &
+echo "==> Frontend bauen (fuer Prod-Assets)"
+npm run build
 
-echo "Setup complete. Application is running at http://localhost:5173"
+cat <<EOF
+----------------------------------------
+Setup abgeschlossen.
+- Code liegt in ${APP_DIR}
+- .env gesetzt (DB + JWT_SECRET)
+- Prisma-Schema angewendet
+- Upload-Pfad uploads/videos vorhanden
+
+Entwicklung starten (fuehrt Frontend + API gemeinsam aus):
+  cd ${APP_DIR}
+  npm run dev -- --host
+
+Fuer echten Produktivbetrieb bitte einen Prozess-Manager (pm2/systemd) und einen Reverse-Proxy (nginx) nutzen.
+----------------------------------------
+EOF

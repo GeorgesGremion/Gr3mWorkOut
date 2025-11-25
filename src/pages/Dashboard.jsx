@@ -1,8 +1,7 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
-    const navigate = useNavigate();
     const role = localStorage.getItem('role');
 
     const handleLogout = () => {
@@ -22,7 +21,7 @@ const Dashboard = () => {
 
                 <Link to="/workout" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className="glass card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '150px', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>💪</span>
+                        <span style={{ fontSize: '1.4rem', marginBottom: '1rem', letterSpacing: '0.05em' }}>[WORKOUT]</span>
                         <h3>Start Workout</h3>
                         <p style={{ opacity: 0.7, textAlign: 'center' }}>Log your daily training</p>
                     </div>
@@ -30,7 +29,7 @@ const Dashboard = () => {
 
                 <Link to="/exercises" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className="glass card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '150px', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</span>
+                        <span style={{ fontSize: '1.4rem', marginBottom: '1rem', letterSpacing: '0.05em' }}>[VIDEOS]</span>
                         <h3>Exercise Library</h3>
                         <p style={{ opacity: 0.7, textAlign: 'center' }}>Manage videos & exercises</p>
                     </div>
@@ -38,7 +37,7 @@ const Dashboard = () => {
 
                 {role === 'ADMIN' || role === 'THERAPIST' ? (
                     <div className="glass card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '150px', opacity: 0.5 }}>
-                        <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>👥</span>
+                        <span style={{ fontSize: '1.4rem', marginBottom: '1rem', letterSpacing: '0.05em' }}>[PATIENTS]</span>
                         <h3>Patients</h3>
                         <p style={{ opacity: 0.7, textAlign: 'center' }}>(Coming Soon)</p>
                     </div>
