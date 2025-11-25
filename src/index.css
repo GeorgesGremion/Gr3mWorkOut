@@ -319,6 +319,12 @@ label {
   box-shadow: var(--shadow);
 }
 
+.auth-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 0 2.5rem;
+}
+
 @media (max-width: 960px) {
   .app-container {
     grid-template-columns: 1fr;
