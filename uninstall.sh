@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# uninstall.sh - Aufräumen für einen frischen Re-Install
-# Entfernt App-Verzeichnis, Uploads und PostgreSQL-Datenbank/User.
+# uninstall.sh - Aufraeumen fuer einen frischen Re-Install
+# Stoppt laufende Dev-Prozesse, entfernt App-Verzeichnis und PostgreSQL-Datenbank/User.
 # ACHTUNG: Alle Daten/Uploads gehen verloren.
 
 set -euo pipefail
@@ -9,20 +9,28 @@ APP_DIR="/opt/physio-app"
 DB_NAME="physio_db"
 DB_USER="physio_user"
 
+if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+  SUDO=""
+else
+  SUDO="sudo"
+fi
+
 RUN_AS_POSTGRES() {
-  if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
-    sudo -u postgres "$@"
-  else
-    sudo -u postgres "$@"
-  fi
+  sudo -u postgres "$@"
 }
 
-# Falls im Repo ausgeführt, dieses Verzeichnis verwenden
+# Falls im Repo ausgefuehrt, dieses Verzeichnis verwenden
 if [ -f "package.json" ] && grep -q "\"name\": \"physio-app\"" package.json; then
   APP_DIR="$(pwd)"
 fi
 
-echo "==> Hinweis: Dieses Skript löscht Datenbank, User und ${APP_DIR}"
+echo "==> Laufende Dev-Prozesse beenden (npm run dev / nodemon / vite)"
+pkill -f "npm run dev" 2>/dev/null || true
+pkill -f "node server/index.js" 2>/dev/null || true
+pkill -f "nodemon" 2>/dev/null || true
+pkill -f "vite" 2>/dev/null || true
+
+echo "==> Hinweis: Dieses Skript loescht Datenbank, User und ${APP_DIR}"
 sleep 1
 
 echo "==> PostgreSQL: DB/User entfernen (falls vorhanden)"
@@ -33,7 +41,7 @@ if [ -d "${APP_DIR}" ] && [ "${APP_DIR}" != "/" ]; then
   echo "==> Entferne ${APP_DIR}"
   $SUDO rm -rf "${APP_DIR}"
 else
-  echo "==> Überspringe Verzeichnis-Löschung (nicht gefunden oder unsicherer Pfad)"
+  echo "==> Ueberspringe Verzeichnis-Loeschung (nicht gefunden oder unsicherer Pfad)"
 fi
 
 echo "==> Fertig. Du kannst jetzt neu installieren (install.sh)."
