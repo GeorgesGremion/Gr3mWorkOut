@@ -1,0 +1,67 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(PATIENT)
+  patients  Patient[] @relation("TherapistPatients")
+}
+
+model Patient {
+  id          Int      @id @default(autoincrement())
+  name        String
+  therapist   User     @relation("TherapistPatients", fields: [therapistId], references: [id])
+  therapistId Int
+  workouts    Workout[]
+}
+
+model Exercise {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  youtubeUrl  String?
+  videoPath   String?
+}
+
+model Workout {
+  id          Int      @id @default(autoincrement())
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  patientId   Int
+  date        DateTime @default(now())
+  split       SplitType
+  warmup      Exercise[] @relation("WarmupExercises")
+  main        Exercise[] @relation("MainExercises")
+  sets        Set[]
+}
+
+model Set {
+  id          Int      @id @default(autoincrement())
+  workout     Workout  @relation(fields: [workoutId], references: [id])
+  workoutId   Int
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId  Int
+  reps        Int
+  weightKg    Float?
+  bandLevel   String?
+}
+
+enum Role {
+  ADMIN
+  THERAPIST
+  PATIENT
+}
+
+enum SplitType {
+  WEEK1
+  WEEK2
+}
