@@ -9,11 +9,13 @@ APP_DIR="/opt/physio-app"
 DB_NAME="physio_db"
 DB_USER="physio_user"
 
-if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
-  SUDO=""
-else
-  SUDO="sudo"
-fi
+RUN_AS_POSTGRES() {
+  if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+    sudo -u postgres "$@"
+  else
+    sudo -u postgres "$@"
+  fi
+}
 
 # Falls im Repo ausgeführt, dieses Verzeichnis verwenden
 if [ -f "package.json" ] && grep -q "\"name\": \"physio-app\"" package.json; then
@@ -24,8 +26,8 @@ echo "==> Hinweis: Dieses Skript löscht Datenbank, User und ${APP_DIR}"
 sleep 1
 
 echo "==> PostgreSQL: DB/User entfernen (falls vorhanden)"
-$SUDO -u postgres psql -c "DROP DATABASE IF EXISTS ${DB_NAME};" || true
-$SUDO -u postgres psql -c "DROP ROLE IF EXISTS ${DB_USER};" || true
+RUN_AS_POSTGRES psql -c "DROP DATABASE IF EXISTS ${DB_NAME};" || true
+RUN_AS_POSTGRES psql -c "DROP ROLE IF EXISTS ${DB_USER};" || true
 
 if [ -d "${APP_DIR}" ] && [ "${APP_DIR}" != "/" ]; then
   echo "==> Entferne ${APP_DIR}"
