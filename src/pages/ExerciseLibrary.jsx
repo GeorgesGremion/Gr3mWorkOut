@@ -54,18 +54,23 @@ const ExerciseLibrary = () => {
     };
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2>Exercise Library</h2>
-                <button onClick={() => setShowAdd(!showAdd)}>{showAdd ? 'Cancel' : '+ Add Exercise'}</button>
+        <div className="grid" style={{ gap: '1.5rem' }}>
+            <div className="page-header">
+                <div>
+                    <p className="pill">Library</p>
+                    <h2>Übungen & Videos</h2>
+                </div>
+                <button className="btn" onClick={() => setShowAdd(!showAdd)}>
+                    {showAdd ? 'Abbrechen' : '+ Übung hinzufügen'}
+                </button>
             </div>
 
-            {error && <div style={{ marginBottom: '1rem', color: '#ff6b6b' }}>{error}</div>}
+            {error && <div className="card" style={{ color: '#ff7a42', borderColor: 'rgba(255,122,66,0.35)' }}>{error}</div>}
 
             {showAdd && (
-                <div className="glass card" style={{ marginBottom: '2rem' }}>
-                    <form onSubmit={handleSubmit}>
-                        <div style={{ marginBottom: '1rem' }}>
+                <div className="panel-strong">
+                    <form className="grid grid-cols-2" style={{ gap: '1rem' }} onSubmit={handleSubmit}>
+                        <div className="field">
                             <label>Name</label>
                             <input
                                 value={formData.name}
@@ -73,15 +78,7 @@ const ExerciseLibrary = () => {
                                 required
                             />
                         </div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label>Description</label>
-                            <textarea
-                                value={formData.description}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                rows={3}
-                            />
-                        </div>
-                        <div style={{ marginBottom: '1rem' }}>
+                        <div className="field">
                             <label>YouTube URL</label>
                             <input
                                 value={formData.youtubeUrl}
@@ -89,43 +86,58 @@ const ExerciseLibrary = () => {
                                 placeholder="https://youtube.com/..."
                             />
                         </div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label>Upload Video (mp4)</label>
+                        <div className="field" style={{ gridColumn: '1 / -1' }}>
+                            <label>Beschreibung</label>
+                            <textarea
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                rows={3}
+                            />
+                        </div>
+                        <div className="field">
+                            <label>Video Upload (mp4)</label>
                             <input
                                 type="file"
                                 accept="video/*"
                                 onChange={e => setVideoFile(e.target.files[0])}
                             />
                         </div>
-                        {uploadProgress > 0 && uploadProgress < 100 && (
-                            <div style={{ marginBottom: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>
-                                <div style={{ width: `${uploadProgress}%`, background: 'var(--accent)', height: '4px', borderRadius: '4px' }}></div>
-                            </div>
-                        )}
-                        <button type="submit">Save Exercise</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <button type="submit" className="btn">Speichern</button>
+                            {uploadProgress > 0 && uploadProgress < 100 && (
+                                <div style={{ flex: 1, height: '6px', background: 'var(--border)', borderRadius: '999px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'var(--accent)' }} />
+                                </div>
+                            )}
+                        </div>
                     </form>
                 </div>
             )}
 
-            {loading && <div style={{ opacity: 0.8, marginBottom: '1rem' }}>Lade Übungen...</div>}
+            {loading && <div className="card" style={{ opacity: 0.85 }}>Lade Übungen...</div>}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            <div className="grid grid-cols-3">
                 {exercises.map(ex => (
-                    <div key={ex.id} className="glass card">
-                        <h3>{ex.name}</h3>
-                        <p style={{ opacity: 0.7, fontSize: '0.9rem', marginBottom: '1rem' }}>{ex.description}</p>
+                    <div key={ex.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3>{ex.name}</h3>
+                            <span className="badge">#{ex.id}</span>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)' }}>{ex.description}</p>
 
                         {ex.youtubeUrl && (
-                            <div style={{ marginBottom: '1rem' }}>
-                                <a href={ex.youtubeUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>Watch on YouTube</a>
-                            </div>
+                            <a href={ex.youtubeUrl} target="_blank" rel="noreferrer" className="badge" style={{ width: 'fit-content' }}>
+                                YouTube öffnen →
+                            </a>
                         )}
 
                         {ex.videoPath && (
-                            <video controls style={{ width: '100%', borderRadius: '8px' }}>
-                                <source src={ex.videoPath} type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
+                            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                                <video controls style={{ width: '100%' }}>
+                                    <source src={ex.videoPath} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
                         )}
                     </div>
                 ))}

@@ -10,39 +10,61 @@ const Dashboard = () => {
         window.location.href = '/login';
     };
 
+    const quickLinks = [
+        { to: '/workout', title: 'Workouts', desc: 'Plane oder logge deine Session', tag: 'Neu' },
+        { to: '/exercises', title: 'Übungen', desc: 'Bibliothek & Videos managen', tag: 'Library' },
+    ];
+
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h2>Dashboard</h2>
-                <button onClick={handleLogout} style={{ background: 'rgba(255, 50, 50, 0.2)' }}>Logout</button>
+        <div className="grid" style={{ gap: '1.5rem' }}>
+            <div className="page-header">
+                <div>
+                    <p className="pill">Daily Pulse</p>
+                    <h1 style={{ marginTop: '0.3rem' }}>Willkommen zurück</h1>
+                </div>
+                <button onClick={handleLogout} className="btn secondary">Logout</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-
-                <Link to="/workout" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div className="glass card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '150px', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '1.4rem', marginBottom: '1rem', letterSpacing: '0.05em' }}>[WORKOUT]</span>
-                        <h3>Start Workout</h3>
-                        <p style={{ opacity: 0.7, textAlign: 'center' }}>Log your daily training</p>
+            <div className="hero">
+                <div className="panel-strong">
+                    <div className="grid grid-cols-2">
+                        <div>
+                            <p className="pill">Progress</p>
+                            <h2 style={{ margin: '0.4rem 0 0.6rem' }}>Level up deine Physio</h2>
+                            <p style={{ color: 'var(--text-secondary)' }}>
+                                Tracke Workouts, teile Videos mit Patient:innen und halte deinen Plan immer aktuell.
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                                <Link to="/workout" className="btn">Workout starten</Link>
+                                <Link to="/exercises" className="btn secondary">Zur Bibliothek</Link>
+                            </div>
+                        </div>
+                        <div className="hero-graphic" />
                     </div>
-                </Link>
+                </div>
+            </div>
 
-                <Link to="/exercises" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div className="glass card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '150px', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '1.4rem', marginBottom: '1rem', letterSpacing: '0.05em' }}>[VIDEOS]</span>
-                        <h3>Exercise Library</h3>
-                        <p style={{ opacity: 0.7, textAlign: 'center' }}>Manage videos & exercises</p>
+            <div className="grid grid-cols-3">
+                {quickLinks.map((item) => (
+                    <Link to={item.to} key={item.to}>
+                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%' }}>
+                            <div className="badge">
+                                <span>{item.tag}</span>
+                            </div>
+                            <h3>{item.title}</h3>
+                            <p style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
+                            <span style={{ marginTop: 'auto', opacity: 0.8 }}>Los geht’s →</span>
+                        </div>
+                    </Link>
+                ))}
+                {(role === 'ADMIN' || role === 'THERAPIST') && (
+                    <div className="card" style={{ opacity: 0.8 }}>
+                        <div className="badge">Bald</div>
+                        <h3>Patienten</h3>
+                        <p style={{ color: 'var(--text-secondary)' }}>Verwalte Profile, Pläne und Fortschritt.</p>
+                        <span style={{ marginTop: 'auto', opacity: 0.8 }}>In Planung</span>
                     </div>
-                </Link>
-
-                {role === 'ADMIN' || role === 'THERAPIST' ? (
-                    <div className="glass card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '150px', opacity: 0.5 }}>
-                        <span style={{ fontSize: '1.4rem', marginBottom: '1rem', letterSpacing: '0.05em' }}>[PATIENTS]</span>
-                        <h3>Patients</h3>
-                        <p style={{ opacity: 0.7, textAlign: 'center' }}>(Coming Soon)</p>
-                    </div>
-                ) : null}
-
+                )}
             </div>
         </div>
     );

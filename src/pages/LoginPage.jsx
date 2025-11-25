@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
 const LoginPage = () => {
@@ -7,7 +6,6 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -16,28 +14,32 @@ const LoginPage = () => {
         try {
             const res = await api.post(endpoint, { email, password });
             if (isRegister) {
-                // Auto login after register or just switch to login
                 setIsRegister(false);
-                alert('Registration successful! Please login.');
+                alert('Registrierung erfolgreich. Bitte einloggen.');
             } else {
                 localStorage.setItem('token', res.data.token);
                 localStorage.setItem('role', res.data.role);
-                window.location.href = '/dashboard'; // Force reload to update auth state
+                window.location.href = '/dashboard';
             }
         } catch (err) {
-            setError(err.response?.data?.error || 'An error occurred');
+            setError(err.response?.data?.error || 'Etwas ist schiefgelaufen');
         }
     };
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-            <div className="glass card" style={{ width: '100%', maxWidth: '400px' }}>
-                <h2 style={{ marginBottom: '1rem', textAlign: 'center' }}>
-                    {isRegister ? 'Register' : 'Login'}
-                </h2>
-                {error && <div style={{ color: '#ff6b6b', marginBottom: '1rem' }}>{error}</div>}
-                <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: '2rem' }}>
+            <div className="panel-strong" style={{ width: '100%', maxWidth: '420px' }}>
+                <div className="page-header" style={{ marginBottom: '0.5rem' }}>
+                    <div>
+                        <p className="pill" style={{ display: 'inline-flex' }}>{isRegister ? 'Neuer Account' : 'Willkommen zurück'}</p>
+                        <h2 style={{ marginTop: '0.35rem' }}>{isRegister ? 'Registrieren' : 'Einloggen'}</h2>
+                    </div>
+                </div>
+
+                {error && <div className="card" style={{ color: '#ff7a42', borderColor: 'rgba(255,122,66,0.35)' }}>{error}</div>}
+
+                <form className="grid" style={{ gap: '1rem' }} onSubmit={handleSubmit}>
+                    <div className="field">
                         <label>Email</label>
                         <input
                             type="email"
@@ -46,8 +48,8 @@ const LoginPage = () => {
                             required
                         />
                     </div>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label>Password</label>
+                    <div className="field">
+                        <label>Passwort</label>
                         <input
                             type="password"
                             value={password}
@@ -55,17 +57,16 @@ const LoginPage = () => {
                             required
                         />
                     </div>
-                    <button type="submit" style={{ width: '100%' }}>
-                        {isRegister ? 'Sign Up' : 'Sign In'}
+                    <button type="submit" className="btn">
+                        {isRegister ? 'Account anlegen' : 'Einloggen'}
                     </button>
                 </form>
-                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                    <span
-                        style={{ cursor: 'pointer', opacity: 0.8 }}
-                        onClick={() => setIsRegister(!isRegister)}
-                    >
-                        {isRegister ? 'Already have an account? Login' : 'No account? Register'}
-                    </span>
+
+                <div className="divider" />
+                <div style={{ textAlign: 'center' }}>
+                    <button onClick={() => setIsRegister(!isRegister)} className="btn secondary" style={{ width: '100%' }}>
+                        {isRegister ? 'Ich habe schon einen Account' : 'Neu hier? Registrieren'}
+                    </button>
                 </div>
             </div>
         </div>

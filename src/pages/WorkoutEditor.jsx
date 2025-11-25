@@ -10,7 +10,6 @@ const WorkoutEditor = () => {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        // Load available exercises
         api.get('/api/exercises')
             .then(res => setExercises(res.data))
             .catch(() => setError('Übungen konnten nicht geladen werden'));
@@ -19,7 +18,7 @@ const WorkoutEditor = () => {
     const addToSection = (exId, section) => {
         const ex = exercises.find(e => e.id === parseInt(exId));
         if (!ex) return;
-        const newItem = { ...ex, tempId: Date.now(), sets: [] };
+        const newItem = { ...ex, tempId: Date.now() + Math.random(), sets: [] };
         if (section === 'warmup') setWarmup([...warmup, newItem]);
         else setMain([...main, newItem]);
     };
@@ -46,7 +45,6 @@ const WorkoutEditor = () => {
     };
 
     const handleSave = async () => {
-        // Construct payload matching Prisma schema structure (simplified for MVP)
         setError('');
         setSaving(true);
         const payload = {
@@ -71,8 +69,7 @@ const WorkoutEditor = () => {
 
         try {
             await api.post('/api/workouts', payload);
-            alert('Workout saved!');
-            // Reset or redirect
+            alert('Workout gespeichert!');
         } catch (err) {
             setError(err.response?.data?.error || 'Fehler beim Speichern des Workouts');
         }
@@ -80,22 +77,26 @@ const WorkoutEditor = () => {
     };
 
     return (
-        <div>
-            <h2>Create Workout</h2>
-            {error && <div style={{ color: '#ff6b6b', margin: '0.5rem 0' }}>{error}</div>}
+        <div className="grid" style={{ gap: '1.25rem' }}>
+            <div className="page-header">
+                <div>
+                    <p className="pill">Planer</p>
+                    <h2>Workout zusammenstellen</h2>
+                </div>
+            </div>
+            {error && <div className="card" style={{ color: '#ff7a42', borderColor: 'rgba(255,122,66,0.35)' }}>{error}</div>}
 
-            <div className="glass card" style={{ marginBottom: '2rem' }}>
-                <label>Split Selection: </label>
-                <select value={split} onChange={e => setSplit(e.target.value)} style={{ width: 'auto', marginLeft: '1rem' }}>
-                    <option value="WEEK1">Split 1 (e.g. Upper Body / Day A)</option>
-                    <option value="WEEK2">Split 2 (e.g. Lower Body / Day B)</option>
+            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <label style={{ fontWeight: 600 }}>Split</label>
+                <select value={split} onChange={e => setSplit(e.target.value)} style={{ width: '240px' }}>
+                    <option value="WEEK1">Split 1 (Upper / A)</option>
+                    <option value="WEEK2">Split 2 (Lower / B)</option>
                 </select>
             </div>
 
-            <div style={{ display: 'grid', gap: '2rem' }}>
-                {/* Warmup Section */}
+            <div className="grid" style={{ gap: '1.25rem' }}>
                 <Section
-                    title="Warm Up"
+                    title="Warm-up"
                     items={warmup}
                     exercises={exercises}
                     onAdd={(id) => addToSection(id, 'warmup')}
@@ -103,7 +104,6 @@ const WorkoutEditor = () => {
                     onUpdateSet={(id, idx, f, v) => updateSet(id, idx, f, v, 'warmup')}
                 />
 
-                {/* Main Section */}
                 <Section
                     title="Main Workout"
                     items={main}
@@ -114,48 +114,63 @@ const WorkoutEditor = () => {
                 />
             </div>
 
-            <button onClick={handleSave} style={{ marginTop: '2rem', width: '100%', padding: '1rem', fontSize: '1.2rem' }} disabled={saving}>
-                {saving ? 'Saving...' : 'Save Workout'}
+            <button onClick={handleSave} className="btn" style={{ width: '100%', padding: '1rem', fontSize: '1.05rem' }} disabled={saving}>
+                {saving ? 'Speichere...' : 'Workout speichern'}
             </button>
         </div>
     );
 };
 
 const Section = ({ title, items, exercises, onAdd, onAddSet, onUpdateSet }) => (
-    <div className="glass card">
-        <h3>{title}</h3>
-        <div style={{ marginBottom: '1rem' }}>
-            <select onChange={(e) => { onAdd(e.target.value); e.target.value = ''; }}>
-                <option value="">+ Add Exercise</option>
+    <div className="panel-strong">
+        <div className="page-header" style={{ marginBottom: '0.5rem' }}>
+            <h3>{title}</h3>
+            <select onChange={(e) => { onAdd(e.target.value); e.target.value = ''; }} style={{ width: '220px' }}>
+                <option value="">+ Übung hinzufügen</option>
                 {exercises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
         </div>
 
-        {items.map(item => (
-            <div key={item.tempId} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                <h4>{item.name}</h4>
-                {item.sets.map((set, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-                        <span>Set {idx + 1}:</span>
-                        <input
-                            type="number" placeholder="Reps" value={set.reps}
-                            onChange={e => onUpdateSet(item.tempId, idx, 'reps', parseInt(e.target.value))}
-                            style={{ width: '60px' }}
-                        />
-                        <input
-                            type="number" placeholder="kg" value={set.weight}
-                            onChange={e => onUpdateSet(item.tempId, idx, 'weight', parseFloat(e.target.value))}
-                            style={{ width: '60px' }}
-                        />
-                        <input
-                            type="text" placeholder="Band (e.g. Red)" value={set.band}
-                            onChange={e => onUpdateSet(item.tempId, idx, 'band', e.target.value)}
-                        />
+        {items.length === 0 && (
+            <div className="card" style={{ color: 'var(--text-secondary)' }}>Noch keine Übungen hinzugefügt.</div>
+        )}
+
+        <div className="grid" style={{ gap: '1rem' }}>
+            {items.map(item => (
+                <div key={item.tempId} className="card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <h4>{item.name}</h4>
+                        <span className="badge">#{item.id}</span>
                     </div>
-                ))}
-                <button onClick={() => onAddSet(item.tempId)} style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}>+ Add Set</button>
-            </div>
-        ))}
+                    {item.sets.map((set, idx) => (
+                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <div className="field">
+                                <label>Reps</label>
+                                <input
+                                    type="number" value={set.reps}
+                                    onChange={e => onUpdateSet(item.tempId, idx, 'reps', parseInt(e.target.value))}
+                                />
+                            </div>
+                            <div className="field">
+                                <label>kg</label>
+                                <input
+                                    type="number" value={set.weight}
+                                    onChange={e => onUpdateSet(item.tempId, idx, 'weight', parseFloat(e.target.value))}
+                                />
+                            </div>
+                            <div className="field">
+                                <label>Band</label>
+                                <input
+                                    type="text" value={set.band}
+                                    onChange={e => onUpdateSet(item.tempId, idx, 'band', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                    <button onClick={() => onAddSet(item.tempId)} className="btn secondary" style={{ marginTop: '0.5rem' }}>+ Set</button>
+                </div>
+            ))}
+        </div>
     </div>
 );
 
