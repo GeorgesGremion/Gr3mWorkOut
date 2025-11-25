@@ -23,7 +23,11 @@ $SUDO apt-get update -y
 $SUDO apt-get install -y git curl ca-certificates gnupg build-essential
 
 echo "==> Node.js 20 installieren"
-curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
+if [ -z "$SUDO" ]; then
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+else
+  curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
+fi
 $SUDO apt-get install -y nodejs
 
 echo "==> PostgreSQL installieren/pruefen"
